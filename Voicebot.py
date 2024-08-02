@@ -1,6 +1,9 @@
 #pip install python-dotenv
 #Streamlit 패키지 추가
-#streamlit run 08_voicebot_ui_main_api_key.py
+#streamlit run 09_voicebot_TTS.py
+
+##수정해야 할 상황 - 설명 아래 공백이 있음.
+
 import streamlit as st
 
 
@@ -21,10 +24,13 @@ from audiorecorder import audiorecorder
 ##시간 정보를 위한 패키지 추가
 from datetime import datetime
 
+##음원 파일 재생 위한 패키지 추가
+import base64
+
 #Open AI API 키 설정하기
 api_key = os.environ.get("OPEN_API_KEY")
 
-system_content = "You are a thoughtful assistant. Respond to all input in 25 words and anser in English."
+system_content = "You are a really kind person. Respond to all input in 25 words and answer in English."
 
 client = openai.OpenAI(api_key=api_key)
 
@@ -54,6 +60,28 @@ def ask_gpt(prompt, model):
     )
     return response.choices[0].message.content
 
+def TTS(text):
+    filename = "output.mp3"
+    response = client.audio.speech.create(
+        model="tts-1",
+        voice="alloy",
+        input=text
+    )
+    response.stream_to_file(filename)
+
+        # 음원 파일 자동 재생생
+    with open(filename, "rb") as f:
+        data = f.read()
+        b64 = base64.b64encode(data).decode()
+        md = f"""
+            <audio autoplay="True">
+            <source src="data:audio/mp3;base64,{b64}" type="audio/mp3">
+            </audio>
+            """
+        st.markdown(md, unsafe_allow_html=True)
+      # 파일 삭제
+    os.remove(filename)
+
 
 ### 메인 함수 ###
 
@@ -82,7 +110,6 @@ def main():
 
         st.markdown("---")
 
-    system_content = "You are a thoughtful assistant. Respond to all input in 25 words and answer in English."
 
     #session state 초기화
     if "chat" not in st.session_state:
@@ -159,6 +186,9 @@ def main():
                     st.write(f'<div style="display:flex;align-items:center;justify-content:flex-end;"><div style="background-color:lightgray;border-radius:12px;padding:8px 12px;margin-left:8px;">{message}</div><div style="font-size:0.8rem;color:gray;">{time}</div></div>', 
                              unsafe_allow_html=True)
                     st.write("")
+
+            #TTS를 활용하여 음성 파일 생성 및 재생
+            TTS(response)
             
         
         else:
