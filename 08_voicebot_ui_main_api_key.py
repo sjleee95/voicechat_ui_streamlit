@@ -1,11 +1,12 @@
 #pip install python-dotenv
 #Streamlit 패키지 추가
-#streamlit run 07_voicebot_ui_main_api_key.py
+#streamlit run 08_voicebot_ui_main_api_key.py
 import streamlit as st
 
 
 #OpenAI 패키지 추가
 import openai
+
 import os
 from dotenv import load_dotenv
 
@@ -22,6 +23,8 @@ from datetime import datetime
 
 #Open AI API 키 설정하기
 api_key = os.environ.get("OPEN_API_KEY")
+
+system_content = "You are a thoughtful assistant. Respond to all input in 25 words and anser in English."
 
 client = openai.OpenAI(api_key=api_key)
 
@@ -79,7 +82,7 @@ def main():
 
         st.markdown("---")
 
-    system_content = "You are a thoughtful assistant. Respond to all input in 25 words and anser in English."
+    system_content = "You are a thoughtful assistant. Respond to all input in 25 words and answer in English."
 
     #session state 초기화
     if "chat" not in st.session_state:
@@ -144,6 +147,19 @@ def main():
             #채팅 시각화를 위한 답변 내용 저장
             now = datetime.now().strftime("%H:%M")
             st.session_state["chat"] = st.session_state["chat"] + [("bot", now, response)]
+
+            #채팅 형식으로 시각화 하기
+            for sender, time, message in st.session_state["chat"]:
+                if sender == "user":
+                    st.write(f'<div style="display:flex;align-items:center;"><div style="background-color:#007AFF;color:white;border-radius:12px;padding:8px 12px;margin-right:8px;">{message}</div><div style="font-size:0.8rem;color:gray;">{time}</div></div>', 
+                             unsafe_allow_html=True)
+                    st.write("")
+
+                else:
+                    st.write(f'<div style="display:flex;align-items:center;justify-content:flex-end;"><div style="background-color:lightgray;border-radius:12px;padding:8px 12px;margin-left:8px;">{message}</div><div style="font-size:0.8rem;color:gray;">{time}</div></div>', 
+                             unsafe_allow_html=True)
+                    st.write("")
+            
         
         else:
             st.session_state["check_reset"] = False
