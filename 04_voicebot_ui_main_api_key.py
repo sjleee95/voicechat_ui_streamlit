@@ -73,12 +73,7 @@ def main():
     with col1:
         #왼쪽 영역 작성
         st.subheader("Ask Question")
-        # 음성 녹음 아이콘 추가
-        audio = audiorecorder()
-        if (audio.duration_seconds > 0 ) and (st.session_state["Check_reset"]==False):
-            #음성 재생
-            st.audio(audio.export().read())
-            
+    
     with col2:
         #오른쪽 영역 작성
         st.subheader("Question & Answer")

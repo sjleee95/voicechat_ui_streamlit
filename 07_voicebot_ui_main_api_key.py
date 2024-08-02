@@ -1,6 +1,6 @@
 #pip install python-dotenv
 #Streamlit 패키지 추가
-#streamlit run 06_voicebot_ui_main_api_key.py
+#streamlit run 07_voicebot_ui_main_api_key.py
 import streamlit as st
 
 
@@ -43,6 +43,13 @@ def STT(speech):
     os.remove(filename)
 
     return transcription.text
+
+def ask_gpt(prompt, model):
+    response = client.chat.completions.create(
+        model=model,
+        messages=prompt 
+    )
+    return response.choices[0].message.content
 
 
 ### 메인 함수 ###
@@ -95,7 +102,9 @@ def main():
         #make reset button
         if st.button(label="reset"):
             #reset code
-            pass
+            st.session_state["chat"] = []
+            st.session_state["messages"] = [{"role":"system","content":system_content}]
+            st.session_state["check_reset"] = [True]
 
     #기능 구현 공간
     col1, col2 = st.columns(2)
@@ -106,23 +115,38 @@ def main():
         # 음성 녹음 아이콘 추가 ## 만약 오디오가 0초 이상이고 .... 한다면, 음성을 재생하라
         audio = audiorecorder()
 
-        if (audio.duration_seconds > 0 ) and (st.session_state["Check_reset"]==False):
+        if (audio.duration_seconds > 0 ) and (st.session_state["check_reset"]==False):
             #음성 재생
             st.audio(audio.export().read())
 
             #음원 파일에서 텍스트 추출
             question = STT(audio)
 
-            #채팅 시각화 위한 질문 내용 저장
+            #채팅을 시각화하기 위해 질문 내용 저장
             now = datetime.now().strftime("%H:%M")
-            st.session_state["chat"] = st.session_state["chat"] +[("user",now,question)]
+            st.session_state["chat"] =st.session_state["chat"] + [("user",now,question)]
 
             #GPT 모델에 넣을 프롬프트를 위해 질문 내용 저장
-            st.session_state["messages"] =st.session_state["messages"] + [{"role":"user", "content":question}]           
+            st.session_state["messages"] = st.session_state["messages"]+[{"role":"user","content":question}]
+            
 
     with col2:
         #오른쪽 영역 작성
         st.subheader("Question & Answer")
+
+        if  (audio.duration_seconds > 0) and (st.session_state["check_reset"]==False):
+            #ChatGPT에게 답변얻기
+            response = ask_gpt(st.session_state["messages"], model)
+
+            #GPT 모델에 넣을 프롬프트를 위해 답변 내용 저장
+            st.session_state["messages"] = st.session_state["messages"] + [{"role":"system", "content":response}]
+
+            #채팅 시각화를 위한 답변 내용 저장
+            now = datetime.now().strftime("%H:%M")
+            st.session_state["chat"] = st.session_state["chat"] + [("bot", now, response)]
+        
+        else:
+            st.session_state["check_reset"] = False
 
 if __name__=="__main__":
     main()
