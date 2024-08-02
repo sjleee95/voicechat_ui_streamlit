@@ -42,7 +42,7 @@ def main():
         """
         )
 
-        st.markdown
+        st.markdown('---')
 
     #사이드바 생성
     with st.sidebar:
